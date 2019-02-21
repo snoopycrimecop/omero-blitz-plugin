@@ -19,6 +19,10 @@ gradlePlugin {
 repositories {
     mavenCentral()
     mavenLocal()
+    maven {
+        name 'ome.maven'
+        url 'https://artifacts.openmicroscopy.org/artifactory/maven/'
+    }
     gradlePluginPortal()
 }
 
