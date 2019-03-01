@@ -133,7 +133,7 @@ class BlitzPlugin implements Plugin<Project> {
             MultiFileConfig call() throws Exception {
                 def extension = new MultiFileConfig("combined", project)
                 extension.template = "combined.vm"
-                extension.outputDir = "${project.buildDir}/${blitz.database}/combined"
+                extension.outputDir = "${project.buildDir}/${blitz.database.get()}/combined"
                 extension.formatOutput = { SemanticType st -> "${st.getShortname()}I.combined" }
                 return extension
             }
