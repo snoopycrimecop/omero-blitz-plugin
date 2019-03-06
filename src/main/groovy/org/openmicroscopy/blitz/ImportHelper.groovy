@@ -36,6 +36,14 @@ class ImportHelper {
         config.resolvedConfiguration.resolvedArtifacts.find { it.name.contains("omero-model") }
     }
 
+    static Configuration getDataFilesConfig(Project project) {
+        Configuration config = project.configurations.findByName(CONFIGURATION_NAME)
+        if (!config) {
+            config = createDataFilesConfig(project)
+        }
+        return config
+    }
+
     static Configuration createDataFilesConfig(Project project) {
         project.buildscript.repositories.addAll(
                 project.repositories.mavenLocal(),
