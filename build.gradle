@@ -18,6 +18,7 @@ gradlePlugin {
 repositories {
     jcenter()
     mavenLocal()
+    maven { url 'https://artifacts.openmicroscopy.org/artifactory/maven' }
 }
 
 dependencies {
