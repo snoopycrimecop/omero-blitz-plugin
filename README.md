@@ -7,7 +7,7 @@ From a high level, blitz-plugin consists of the following tasks/stages:
 
 1. Import `.ome.xml` map files from `org.openmicroscopy:omero-model` (`omero-model.jar`) resources
 2. Import `-types.properties` files from `org.openmicroscopy:omero-model` (`omero-model.jar`) resources
-3. Using the [`omero-dsl-plugin`](https://gitlab.com/openmicroscopy/incubator/omero-dsl), generate `xx.combined` files
+3. Using the [`omero-dsl-plugin`](https://github.com/ome/omero-dsl-plugin), generate `xx.combined` files
 4. Process and split `xx.combined` files into chosen languages
 
 ### Usage
@@ -37,7 +37,7 @@ plugins {
 
 ### Blitz Plugin Methods
 
-Use the api block to configure the generation of API files with `org.openmicroscopy.blitz.tasks.SplitTask`. 
+Use the api block to configure the generation of API files with `org.openmicroscopy.api.tasks.SplitTask`. 
 The API block can contain one or more split tasks, each with its own chosen language for generating API files. 
 
 ```groovy
