@@ -58,7 +58,7 @@ class ImportHelper {
 
         config.defaultDependencies(new Action<DependencySet>() {
             void execute(DependencySet dependencies) {
-                dependencies.add(project.getDependencies().create("org.openmicroscopy:omero-model:5.5.0-SNAPSHOT"))
+                dependencies.add(project.getDependencies().create("org.openmicroscopy:omero-model:5.5.0-m4"))
             }
         })
 
