@@ -25,21 +25,17 @@ import ome.dsl.SemanticType
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.CopySpec
-import org.gradle.api.file.FileCopyDetails
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.model.ObjectFactory
-import org.gradle.api.plugins.JavaPlugin
 import org.gradle.api.provider.Provider
 import org.gradle.api.provider.ProviderFactory
-import org.gradle.api.tasks.Sync
 import org.gradle.api.tasks.TaskProvider
 import org.openmicroscopy.api.ApiPlugin
 import org.openmicroscopy.api.extensions.ApiExtension
 import org.openmicroscopy.api.tasks.SplitTask
 import org.openmicroscopy.blitz.extensions.BlitzExtension
+import org.openmicroscopy.blitz.tasks.ImportResourcesTask
 import org.openmicroscopy.dsl.DslPlugin
 import org.openmicroscopy.dsl.extensions.BaseFileConfig
 import org.openmicroscopy.dsl.extensions.DslExtension
@@ -58,13 +54,17 @@ class BlitzPlugin implements Plugin<Project> {
 
     private static final Logger Log = Logging.getLogger(BlitzPlugin)
 
-    static final String TASK_IMPORT_MODEL_RESOURCES = 'importModelResources'
+    public static final String TASK_IMPORT_MAPPINGS = "importMappings"
+
+    public static final String TASK_IMPORT_DATABASE_TYPES = "importDatabaseTypes"
 
     Map<String, BaseFileConfig> fileGeneratorConfigMap = [:]
 
     final ObjectFactory objectFactory
 
     final ProviderFactory providerFactory
+
+    private Project project
 
     @Inject
     BlitzPlugin(ObjectFactory objectFactory, ProviderFactory providerFactory) {
@@ -74,25 +74,14 @@ class BlitzPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        final BlitzExtension blitz = project.extensions.create("blitz", BlitzExtension, project)
+        this.project = project
 
-        final TaskProvider<Sync> importTask = registerImportTask(project)
+        BlitzExtension blitz =
+                project.extensions.create("blitz", BlitzExtension, project)
 
-        project.plugins.withType(JavaPlugin) {
-            // Configure task to import omero data
-            importTask.configure(new Action<Sync>() {
-                @Override
-                void execute(Sync t) {
-                    Configuration config = ImportHelper.getDataFilesConfig(project)
-                    def artifact = config.resolvedConfiguration
-                            .resolvedArtifacts
-                            .find { it.name.contains("omero-model") }
+        TaskProvider<ImportResourcesTask> importMappings = registerImportMappings()
 
-                    t.dependsOn(config)
-                    t.with(createImportModelResSpec(project, artifact.file))
-                }
-            })
-        }
+        TaskProvider<ImportResourcesTask> importDbTypesTask = registerImportDbTypes()
 
         project.plugins.withType(DslPlugin) {
             // Get the [ task.name | extension ] map
@@ -103,18 +92,17 @@ class BlitzPlugin implements Plugin<Project> {
 
             // Configure extensions of ome.dsl plugin
             dsl.outputDir.set(blitz.outputDir)
-            dsl.omeXmlFiles.from(importTask)
-            dsl.databaseTypes.from(importTask)
+            dsl.omeXmlFiles.from(importMappings)
+            dsl.databaseTypes.from(importDbTypesTask)
 
             // Add generateCombinedFilesTask
-            // registerGenerateCombinedTask(project, ome.dsl)
-            dsl.multiFile.add(createGenerateCombinedFilesConfig(project, blitz).get())
+            dsl.multiFile.addLater(createGenerateCombinedFilesConfig(blitz))
 
             // Set each generator task to depend on
             project.tasks.withType(GeneratorBaseTask).configureEach(new Action<GeneratorBaseTask>() {
                 @Override
                 void execute(GeneratorBaseTask gbt) {
-                    gbt.dependsOn importTask
+                    gbt.dependsOn importMappings, importDbTypesTask
                 }
             })
         }
@@ -136,17 +124,7 @@ class BlitzPlugin implements Plugin<Project> {
         }
     }
 
-    TaskProvider<Sync> registerImportTask(Project project) {
-        project.tasks.register(TASK_IMPORT_MODEL_RESOURCES, Sync, new Action<Sync>() {
-            @Override
-            void execute(Sync s) {
-                s.into("$project.buildDir/import")
-            }
-        })
-    }
-
-
-    Provider<MultiFileConfig> createGenerateCombinedFilesConfig(Project project, BlitzExtension blitz) {
+    Provider<MultiFileConfig> createGenerateCombinedFilesConfig(BlitzExtension blitz) {
         providerFactory.provider(new Callable<MultiFileConfig>() {
             @Override
             MultiFileConfig call() throws Exception {
@@ -166,74 +144,30 @@ class BlitzPlugin implements Plugin<Project> {
         project.tasks.named(combinedFilesExt.key, FilesGeneratorTask)
     }
 
-    CopySpec createImportModelResSpec(Project project, Object from) {
-        project.copySpec(new Action<CopySpec>() {
+    TaskProvider<ImportResourcesTask> registerImportMappings() {
+        project.tasks.register(TASK_IMPORT_MAPPINGS, ImportResourcesTask, new Action<ImportResourcesTask>() {
             @Override
-            void execute(CopySpec copySpec) {
-                copySpec.with {
-                    includeEmptyDirs = false
-                    into("mappings", new Action<CopySpec>() {
-                        @Override
-                        void execute(CopySpec spec) {
-                            spec.from(project.zipTree(from))
-                            spec.include(PATTERN_OME_XML)
-                            spec.eachFile { FileCopyDetails copyDetails ->
-                                copyDetails.path = "mappings/$copyDetails.name"
-                            }
-                        }
-                    })
-                    into("databaseTypes", new Action<CopySpec>() {
-                        @Override
-                        void execute(CopySpec spec) {
-                            spec.from(project.zipTree(from))
-                            spec.include(PATTERN_DB_TYPE)
-                            spec.eachFile { FileCopyDetails copyDetails ->
-                                copyDetails.path = "databaseTypes/$copyDetails.name"
-                            }
-                        }
-                    })
+            void execute(ImportResourcesTask t) {
+                t.with {
+                    config = ImportHelper.getConfigurationForOmeroModel(project)
+                    extractDir = "$project.buildDir/mappings"
+                    pattern = PATTERN_OME_XML
                 }
             }
         })
     }
 
-//    TaskProvider<FilesGeneratorTask> registerGenerateCombinedTask(Project project, DslExtension ome.dsl) {
-//        String taskName = "generateCombined" + ome.dsl.database.get().capitalize()
-//        project.tasks.register(taskName, FilesGeneratorTask, new Action<FilesGeneratorTask>() {
-//            @Override
-//            void execute(FilesGeneratorTask t) {
-//                t.with {
-//                    dependsOn
-//                    velocityConfig.set(ome.dsl.velocity.data)
-//                    outputDir.set(project.layout.buildDirectory.dir("combined"))
-//                    template.set(findTemplateProvider(ome.dsl.templates, new File("combined.vm")))
-//                    databaseType.set(findDatabaseTypeProvider(ome.dsl.databaseTypes, ome.dsl.database))
-//                    mappingFiles.from(ome.dsl.omeXmlFiles)
-//                }
-//            }
-//        })
-//    }
-//
-//    Provider<RegularFile> findDatabaseTypeProvider(FileCollection collection, Property<String> type) {
-//        providerFactory.provider(new Callable<RegularFile>() {
-//            @Override
-//            RegularFile call() throws Exception {
-//                RegularFileProperty result = objectFactory.fileProperty()
-//                result.set(DslBase.findDatabaseType(collection, type.get()))
-//                result.get()
-//            }
-//        })
-//    }
-//
-//    Provider<RegularFile> findTemplateProvider(FileCollection collection, File file) {
-//        providerFactory.provider(new Callable<RegularFile>() {
-//            @Override
-//            RegularFile call() throws Exception {
-//                RegularFileProperty result = objectFactory.fileProperty()
-//                result.set(DslBase.findTemplate(collection, file))
-//                result.get()
-//            }
-//        })
-//    }
+    TaskProvider<ImportResourcesTask> registerImportDbTypes() {
+        project.tasks.register(TASK_IMPORT_DATABASE_TYPES, ImportResourcesTask, new Action<ImportResourcesTask>() {
+            @Override
+            void execute(ImportResourcesTask t) {
+                t.with {
+                    config = ImportHelper.getConfigurationForOmeroModel(project)
+                    extractDir = "$project.buildDir/databaseTypes"
+                    pattern = PATTERN_DB_TYPE
+                }
+            }
+        })
+    }
 
 }
