@@ -1,10 +1,10 @@
 plugins {
     id "groovy"
-    id "org.openmicroscopy.plugin-project" version "5.5.0-m4"
+    id "org.openmicroscopy.plugin-project" version "5.5.0-m5"
 }
 
 group = "org.openmicroscopy"
-version = "5.5.0-SNAPSHOT"
+version = "5.5.0-m5"
 
 repositories {
     jcenter()
@@ -21,8 +21,8 @@ dependencies {
     testImplementation "junit:junit:4.12"
     testImplementation "org.spockframework:spock-core:1.2-groovy-2.5"
 
-    implementation "org.openmicroscopy:omero-dsl-plugin:5.5.0-m4"
-    implementation "org.openmicroscopy:omero-api-plugin:5.5.0-m4"
+    implementation "org.openmicroscopy:omero-dsl-plugin:5.5.0-m5"
+    implementation "org.openmicroscopy:omero-api-plugin:5.5.0-m5"
     implementation "commons-io:commons-io:2.6"
 }
 
