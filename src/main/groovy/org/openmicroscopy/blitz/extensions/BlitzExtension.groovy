@@ -38,7 +38,7 @@ class BlitzExtension {
         this.outputDir = project.objects.directoryProperty()
 
         this.database.convention("psql")
-        this.outputDir.convention(project.layout.projectDirectory.dir("src/psql"))
+        this.outputDir.convention(project.layout.projectDirectory.dir("src").dir(database))
     }
 
 }

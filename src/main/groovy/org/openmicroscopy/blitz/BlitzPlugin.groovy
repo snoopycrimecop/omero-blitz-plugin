@@ -29,6 +29,7 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.TaskProvider
 import org.openmicroscopy.api.ApiPlugin
+import org.openmicroscopy.api.ApiPluginBase
 import org.openmicroscopy.api.extensions.ApiExtension
 import org.openmicroscopy.api.tasks.SplitTask
 import org.openmicroscopy.blitz.extensions.BlitzExtension
@@ -65,13 +66,6 @@ class BlitzPlugin implements Plugin<Project> {
 
         BlitzExtension blitz =
                 project.extensions.create(EXTENSION_BLITZ, BlitzExtension, project)
-
-        DslExtension dsl =
-                project.extensions.getByType(DslExtension)
-
-        // Set database type to same as blitz
-        dsl.database.convention(blitz.database)
-        dsl.outputDir.convention(blitz.outputDir)
 
         registerImportMappings()
         registerImportDbTypes()
@@ -110,6 +104,7 @@ class BlitzPlugin implements Plugin<Project> {
         DslExtension dsl = project.extensions.getByType(DslExtension)
 
         // Configure extensions of ome.dsl plugin
+        dsl.database.set(blitz.database)
         dsl.outputDir.set(blitz.outputDir)
         dsl.omeXmlFiles.from(project.tasks.named(TASK_IMPORT_MAPPINGS))
         dsl.databaseTypes.from(project.tasks.named(TASK_IMPORT_DATABASE_TYPES))
