@@ -29,7 +29,6 @@ import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.TaskProvider
 import org.openmicroscopy.api.ApiPlugin
-import org.openmicroscopy.api.ApiPluginBase
 import org.openmicroscopy.api.extensions.ApiExtension
 import org.openmicroscopy.api.tasks.SplitTask
 import org.openmicroscopy.blitz.extensions.BlitzExtension
@@ -39,9 +38,7 @@ import org.openmicroscopy.dsl.DslPluginBase
 import org.openmicroscopy.dsl.extensions.DslExtension
 import org.openmicroscopy.dsl.extensions.MultiFileConfig
 import org.openmicroscopy.dsl.tasks.FilesGeneratorTask
-import org.openmicroscopy.dsl.tasks.GeneratorBaseTask
 
-import static org.openmicroscopy.dsl.FileTypes.PATTERN_DB_TYPE
 import static org.openmicroscopy.dsl.FileTypes.PATTERN_OME_XML
 
 @CompileStatic
@@ -78,11 +75,9 @@ class BlitzPlugin implements Plugin<Project> {
         project.tasks.register(TASK_IMPORT_MAPPINGS, ImportResourcesTask, new Action<ImportResourcesTask>() {
             @Override
             void execute(ImportResourcesTask t) {
-                t.with {
-                    config = ImportHelper.getConfigurationForOmeroModel(project)
-                    extractDir = "$project.buildDir/mappings"
-                    pattern = PATTERN_OME_XML
-                }
+                t.setConfig(ImportHelper.getConfigurationForOmeroModel(project))
+                t.setExtractDir(project.layout.buildDirectory.dir("mappings"))
+                t.setPattern(PATTERN_OME_XML)
             }
         })
     }
@@ -91,11 +86,9 @@ class BlitzPlugin implements Plugin<Project> {
         project.tasks.register(TASK_IMPORT_DATABASE_TYPES, ImportResourcesTask, new Action<ImportResourcesTask>() {
             @Override
             void execute(ImportResourcesTask t) {
-                t.with {
-                    config = ImportHelper.getConfigurationForOmeroModel(project)
-                    extractDir = "$project.buildDir/databaseTypes"
-                    pattern = PATTERN_DB_TYPE
-                }
+                t.setConfig(ImportHelper.getConfigurationForOmeroModel(project))
+                t.setExtractDir(project.layout.buildDirectory.dir("databaseTypes"))
+                t.setPattern(PATTERN_OME_XML)
             }
         })
     }
@@ -119,11 +112,13 @@ class BlitzPlugin implements Plugin<Project> {
             }
         })
 
-        // Set each generator task to depend on
-        project.tasks.withType(GeneratorBaseTask).configureEach(new Action<GeneratorBaseTask>() {
+        String dslTaskName = DslPluginBase.makeDslTaskName("combined", dsl.database.get())
+
+        // Set each generator task to depend on import resource tasks
+        project.tasks.named(dslTaskName, FilesGeneratorTask).configure(new Action<FilesGeneratorTask>() {
             @Override
-            void execute(GeneratorBaseTask gbt) {
-                gbt.dependsOn(project.tasks.named(TASK_IMPORT_MAPPINGS),
+            void execute(FilesGeneratorTask task) {
+                task.dependsOn(project.tasks.named(TASK_IMPORT_MAPPINGS),
                         project.tasks.named(TASK_IMPORT_DATABASE_TYPES))
             }
         })

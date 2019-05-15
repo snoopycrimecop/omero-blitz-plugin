@@ -25,15 +25,21 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.artifacts.ResolvedArtifact
+import org.gradle.api.file.Directory
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
+import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import org.gradle.api.tasks.util.PatternSet
+import org.gradle.internal.Factory
 
+import javax.inject.Inject
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
@@ -43,16 +49,24 @@ class ImportResourcesTask extends DefaultTask {
 
     private static final Logger Log = Logging.getLogger(ImportResourcesTask)
 
-    @InputFiles
-    Configuration config
-
     @OutputDirectory
-    File extractDir
+    final DirectoryProperty extractDir = project.objects.directoryProperty()
 
     @Input
-    String pattern
+    final Property<String> pattern = project.objects.property(String)
 
-    PatternSet patternSet = new PatternSet()
+    private final PatternSet patternSet
+
+    private Configuration config
+
+    ImportResourcesTask() {
+        patternSet = getPatternSetFactory().create()
+    }
+
+    @Inject
+    protected Factory<PatternSet> getPatternSetFactory() {
+        throw new UnsupportedOperationException()
+    }
 
     @TaskAction
     void apply() {
@@ -64,7 +78,7 @@ class ImportResourcesTask extends DefaultTask {
         }
 
         // Set our pattern set
-        patternSet.include(pattern)
+        patternSet.include(pattern.get())
 
         // obtain file tree for jar file
         FileTree fileTree = project.zipTree(artifact.file).matching(patternSet)
@@ -72,23 +86,43 @@ class ImportResourcesTask extends DefaultTask {
         // Copy each file matching pattern to our extract directory
         fileTree.files.each { File src ->
             Path file = src.toPath()
-            Path to = extractDir.toPath()
+            Path to = extractDir.asFile.get().toPath()
 
             // Copy each file to output location
             Files.copy(src.toPath(), to.resolve(file.getFileName()), StandardCopyOption.REPLACE_EXISTING)
         }
     }
 
-    void extractDir(Object dir) {
-        setExtractDir(dir)
+    @InputFiles
+    Configuration getConfig() {
+        this.config
     }
 
-    void setExtractDir(Object dir) {
-        this.extractDir = project.file(dir)
+    void setConfig(Configuration config) {
+        this.config = config
+
+        // Set this task to depend on the configuration
+        this.dependsOn(config)
     }
 
-    List<File> getResults() {
-        return Arrays.asList(extractDir.listFiles())
+    void setExtractDir(File dir) {
+        this.extractDir.set(dir)
+    }
+
+    void setExtractDir(Directory dir) {
+        this.extractDir.set(dir)
+    }
+
+    void setExtractDir(Provider<? extends Directory> dir) {
+        this.extractDir.set(dir)
+    }
+
+    void setPattern(String pattern) {
+        this.pattern.set(pattern)
+    }
+
+    void setPattern(Provider<? extends String> pattern) {
+        this.pattern.set(pattern)
     }
 
 }
