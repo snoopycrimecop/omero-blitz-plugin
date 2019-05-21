@@ -1,12 +1,12 @@
 ### OMERO blitz Gradle plugin
 
-The _omero-blitz-plugin_ is a gradle plugin that provides users and projects the ability to generate/compile the necessary files
+The _omero-blitz-plugin_ is a [Gradle](https://gradle.org) plugin that provides
+users and projects the ability to generate/compile the necessary files
 required files to use _omero-blitz_
 
-From a high level, blitz-plugin consists of the following tasks/stages:
+From a high level, the omero-blitz-plugin consists of the following tasks/stages:
 
-1. Import `.ome.xml` map files from `org.openmicroscopy:omero-model` (`omero-model.jar`) resources
-2. Import `-types.properties` files from `org.openmicroscopy:omero-model` (`omero-model.jar`) resources
+1. Process and split `xx.combined` files into chosen languages
 
 ### Usage
 
