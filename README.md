@@ -1,8 +1,8 @@
 ### OMERO blitz Gradle plugin
 
 The _omero-blitz-plugin_ is a [Gradle](https://gradle.org) plugin that provides
-users and projects the ability to generate/compile the necessary files
-required files to use _omero-blitz_
+users and projects the ability to generate/compile the files required
+to use _omero-blitz_
 
 From a high level, the omero-blitz-plugin consists of the following tasks/stages:
 
