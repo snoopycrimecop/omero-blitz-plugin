@@ -25,7 +25,6 @@ import ome.dsl.SemanticType
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.TaskProvider
@@ -39,6 +38,7 @@ import org.openmicroscopy.dsl.DslPluginBase
 import org.openmicroscopy.dsl.extensions.DslExtension
 import org.openmicroscopy.dsl.extensions.MultiFileConfig
 import org.openmicroscopy.dsl.tasks.FilesGeneratorTask
+import org.openmicroscopy.dsl.tasks.GeneratorBaseTask
 
 import static org.openmicroscopy.dsl.FileTypes.PATTERN_DB_TYPE
 import static org.openmicroscopy.dsl.FileTypes.PATTERN_OME_XML
@@ -114,33 +114,14 @@ class BlitzPlugin implements Plugin<Project> {
             }
         })
 
-        // Callback for when dsl tasks are added
-        project.afterEvaluate {
-            project.tasks.whenTaskAdded { Task task ->
-                // Ensure that each generateXXX task imports mappings and database types from omero-model
-                // before running
-                if (task instanceof FilesGeneratorTask) {
-                    task.configure { Task t ->
-                        t.dependsOn(project.tasks.named(TASK_IMPORT_MAPPINGS),
-                                project.tasks.named(TASK_IMPORT_DATABASE_TYPES))
-                    }
-                }
+        // Ensure that each generateXXX task imports mappings and database types from omero-model
+        // before running
+        project.tasks.withType(GeneratorBaseTask).configureEach(new Action<GeneratorBaseTask>() {
+            @Override
+            void execute(GeneratorBaseTask t) {
+                t.dependsOn(project.tasks.named(TASK_IMPORT_MAPPINGS), project.tasks.named(TASK_IMPORT_DATABASE_TYPES))
             }
-        }
-
-
-        // Set each generator task to depend on import resource tasks
-//        project.afterEvaluate {
-//            // Ensure that each generateXXX task imports mappings and database types from omero-model
-//            // before running
-//            project.tasks.withType(FilesGeneratorTask).configureEach(new Action<FilesGeneratorTask>() {
-//                @Override
-//                void execute(FilesGeneratorTask task) {
-//                    task.dependsOn(project.tasks.named(TASK_IMPORT_MAPPINGS),
-//                            project.tasks.named(TASK_IMPORT_DATABASE_TYPES))
-//                }
-//            })
-//        }
+        })
     }
 
     void configureApiPlugin(BlitzExtension blitz) {
