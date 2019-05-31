@@ -34,7 +34,6 @@ import org.openmicroscopy.api.tasks.SplitTask
 import org.openmicroscopy.blitz.extensions.BlitzExtension
 import org.openmicroscopy.blitz.tasks.ImportResourcesTask
 import org.openmicroscopy.dsl.DslPlugin
-import org.openmicroscopy.dsl.DslPluginBase
 import org.openmicroscopy.dsl.extensions.DslExtension
 import org.openmicroscopy.dsl.extensions.MultiFileConfig
 import org.openmicroscopy.dsl.tasks.FilesGeneratorTask
@@ -125,7 +124,7 @@ class BlitzPlugin implements Plugin<Project> {
     }
 
     void configureApiPlugin(BlitzExtension blitz) {
-        TaskProvider<FilesGeneratorTask> generateCombinedTask = getGenerateCombinedTask(blitz)
+        TaskProvider<FilesGeneratorTask> generateCombinedTask = getGenerateCombinedTask()
 
         ApiExtension api = project.extensions.getByType(ApiExtension)
         api.outputDir.set(blitz.outputDir)
@@ -139,8 +138,9 @@ class BlitzPlugin implements Plugin<Project> {
         })
     }
 
-    TaskProvider<FilesGeneratorTask> getGenerateCombinedTask(BlitzExtension blitz) {
-        String taskName = DslPluginBase.makeDslTaskName("combined", blitz.database.get())
+    TaskProvider<FilesGeneratorTask> getGenerateCombinedTask() {
+        DslExtension dsl = project.extensions.getByType(DslExtension)
+        String taskName = dsl.makeDslTaskName("combined")
         project.tasks.named(taskName, FilesGeneratorTask)
     }
 
