@@ -140,7 +140,7 @@ class BlitzPlugin implements Plugin<Project> {
 
     TaskProvider<FilesGeneratorTask> getGenerateCombinedTask() {
         DslExtension dsl = project.extensions.getByType(DslExtension)
-        String taskName = dsl.makeDslTaskName("combined")
+        String taskName = dsl.createTaskName("combined")
         project.tasks.named(taskName, FilesGeneratorTask)
     }
 
