@@ -30,15 +30,10 @@ class BlitzExtension {
 
     final Property<String> database
 
-    final DirectoryProperty outputDir
-
     BlitzExtension(Project project) {
         this.project = project
         this.database = project.objects.property(String)
-        this.outputDir = project.objects.directoryProperty()
-
         this.database.convention("psql")
-        this.outputDir.convention(project.layout.projectDirectory.dir("src").dir(database))
     }
 
 }
