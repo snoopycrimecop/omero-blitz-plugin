@@ -24,6 +24,7 @@ dependencies {
 
     implementation("org.openmicroscopy:omero-dsl-plugin:5.5.1")
     implementation("org.openmicroscopy:omero-api-plugin:5.5.1")
+    implementation("org.openmicroscopy.gradle.ice-builder:slice:1.5.2")
     implementation("commons-io:commons-io:2.6")
 }
 

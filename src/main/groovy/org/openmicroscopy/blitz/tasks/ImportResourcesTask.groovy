@@ -24,12 +24,9 @@ import groovy.transform.CompileStatic
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.artifacts.ResolvedArtifact
 import org.gradle.api.file.Directory
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileTree
-import org.gradle.api.logging.Logger
-import org.gradle.api.logging.Logging
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
@@ -47,13 +44,14 @@ import java.nio.file.StandardCopyOption
 @CompileStatic
 class ImportResourcesTask extends DefaultTask {
 
-    private static final Logger Log = Logging.getLogger(ImportResourcesTask)
-
     @OutputDirectory
     final DirectoryProperty extractDir = project.objects.directoryProperty()
 
     @Input
     final Property<String> pattern = project.objects.property(String)
+
+    @Input
+    final Property<String> artifactName = project.objects.property(String)
 
     private final PatternSet patternSet
 
@@ -61,6 +59,7 @@ class ImportResourcesTask extends DefaultTask {
 
     ImportResourcesTask() {
         patternSet = getPatternSetFactory().create()
+        artifactName.convention("omero-model")
     }
 
     @Inject
@@ -70,18 +69,20 @@ class ImportResourcesTask extends DefaultTask {
 
     @TaskAction
     void apply() {
-        ResolvedArtifact artifact = config.resolvedConfiguration.resolvedArtifacts.find {
-            it.name.contains("omero-model")
+        final String artifactName = artifactName.get()
+
+        File artifact = config.files.find {
+            it.name.contains(artifactName)
         }
         if (!artifact) {
-            throw new GradleException("omero-model artifact not found")
+            throw new GradleException("$artifactName artifact not found")
         }
 
         // Set our pattern set
         patternSet.include(pattern.get())
 
         // obtain file tree for jar file
-        FileTree fileTree = project.zipTree(artifact.file).matching(patternSet)
+        FileTree fileTree = project.zipTree(artifact).matching(patternSet)
 
         // Copy each file matching pattern to our extract directory
         fileTree.files.each { File src ->
@@ -123,6 +124,10 @@ class ImportResourcesTask extends DefaultTask {
 
     void setPattern(Provider<? extends String> pattern) {
         this.pattern.set(pattern)
+    }
+
+    void setArtifactName(String name) {
+        this.artifactName.set(name)
     }
 
 }

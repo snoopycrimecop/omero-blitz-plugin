@@ -18,55 +18,21 @@
  *
  * ------------------------------------------------------------------------------
  */
-package org.openmicroscopy.blitz.extensions
+package org.openmicroscopy.blitz
 
+import groovy.transform.CompileStatic
+import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.provider.Property
+import org.openmicroscopy.blitz.extensions.BlitzExtension
 
-class CombinedConfig {
+@CompileStatic
+class BasePlugin implements Plugin<Project> {
 
-    private final Project project
+    public static final String EXTENSION_BLITZ = "blitz"
 
-    final Property<File> outputDir
-
-    final Property<File> template
-
-    CombinedConfig(Project project) {
-        this.project = project
-        this.outputDir = project.objects.property(File)
-        this.template = project.objects.property(File)
-    }
-
-    void outputDir(String file) {
-        setOutputDir(file)
-    }
-
-    void outputDir(File file) {
-        setOutputDir(file)
-    }
-
-    void setOutputDir(String file) {
-        setOutputDir(new File(file))
-    }
-
-    void setOutputDir(File file) {
-        this.outputDir.set(file)
-    }
-
-    void template(String file) {
-        setTemplate(file)
-    }
-
-    void template(File file) {
-        setTemplate(file)
-    }
-
-    void setTemplate(String file) {
-        setTemplate(new File(file))
-    }
-
-    void setTemplate(File file) {
-        this.template.set(file)
+    @Override
+    void apply(Project project) {
+        project.extensions.create(EXTENSION_BLITZ, BlitzExtension, project)
     }
 
 }
