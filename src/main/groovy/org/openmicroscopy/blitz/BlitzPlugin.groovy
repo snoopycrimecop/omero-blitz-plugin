@@ -9,9 +9,7 @@ class BlitzPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.plugins.apply(BlitzDslPlugin)
-        project.plugins.apply(BlitzApiPlugin)
-        project.plugins.apply(BlitzIcePlugin)
+        project.plugins.apply(BlitzIcePythonPlugin)
     }
 
 }

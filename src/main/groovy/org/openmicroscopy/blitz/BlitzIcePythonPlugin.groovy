@@ -10,10 +10,11 @@ import org.gradle.api.file.Directory
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.bundling.Zip
+import org.openmicroscopy.api.ApiPlugin
 import org.openmicroscopy.api.extensions.ApiExtension
 import org.openmicroscopy.api.extensions.SplitExtension
-import org.openmicroscopy.blitz.BlitzIcePlugin
 import org.openmicroscopy.blitz.extensions.IceExtension
+import org.openmicroscopy.dsl.DslPlugin
 import org.openmicroscopy.dsl.extensions.DslExtension
 import org.openmicroscopy.dsl.extensions.SingleFileConfig
 import org.openmicroscopy.tasks.IcePythonTask
@@ -32,6 +33,8 @@ class BlitzIcePythonPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         project.pluginManager.apply(BlitzIcePlugin)
+        project.pluginManager.apply(DslPlugin)
+        project.pluginManager.apply(ApiPlugin)
 
         this.project = project
         this.ice = project.extensions.getByType(IceExtension)
