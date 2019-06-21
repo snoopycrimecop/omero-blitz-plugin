@@ -2,10 +2,17 @@ package org.openmicroscopy.blitz
 
 import groovy.transform.CompileStatic
 import ome.dsl.SemanticType
+import org.apache.commons.io.FilenameUtils
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.Task
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.openmicroscopy.api.ApiPlugin
+import org.openmicroscopy.api.extensions.ApiExtension
+import org.openmicroscopy.api.extensions.SplitExtension
+import org.openmicroscopy.api.tasks.SplitTask
 import org.openmicroscopy.blitz.extensions.BlitzExtension
 import org.openmicroscopy.blitz.tasks.ImportResourcesTask
 import org.openmicroscopy.dsl.DslPlugin
@@ -17,11 +24,13 @@ import static org.openmicroscopy.dsl.FileTypes.PATTERN_DB_TYPE
 import static org.openmicroscopy.dsl.FileTypes.PATTERN_OME_XML
 
 @CompileStatic
-class BlitzDslPlugin implements Plugin<Project> {
+class BlitzBasePlugin implements Plugin<Project> {
 
     public static final String TASK_IMPORT_MAPPINGS = "importMappings"
 
     public static final String TASK_IMPORT_DATABASE_TYPES = "importDatabaseTypes"
+
+    public static final String EXTENSION_BLITZ = "blitz"
 
     private Project project
 
@@ -30,13 +39,15 @@ class BlitzDslPlugin implements Plugin<Project> {
         this.project = project
 
         project.pluginManager.apply(DslPlugin)
+        project.pluginManager.apply(ApiPlugin)
 
-        project.pluginManager.apply(BasePlugin)
+        project.extensions.create(EXTENSION_BLITZ, BlitzExtension, project)
 
         registerImportTask(TASK_IMPORT_MAPPINGS, "mappings", PATTERN_OME_XML)
         registerImportTask(TASK_IMPORT_DATABASE_TYPES, "databaseTypes", PATTERN_DB_TYPE)
 
-        configureDslPlugin(project.extensions.getByType(BlitzExtension))
+        configureDslPlugin()
+        configureApiPlugin()
     }
 
     TaskProvider<ImportResourcesTask> registerImportTask(String taskName, String outputDir, String filePattern) {
@@ -55,7 +66,9 @@ class BlitzDslPlugin implements Plugin<Project> {
      * .ome.xml files and *-types.properties files are obtained from "omero-model.jar:
      * @param blitz
      */
-    void configureDslPlugin(BlitzExtension blitz) {
+    void configureDslPlugin() {
+        def blitz = project.extensions.getByType(BlitzExtension)
+
         // Configure extensions of ome.dsl plugin
         DslExtension dsl = project.extensions.getByType(DslExtension)
         dsl.database.set(blitz.database)
@@ -80,6 +93,49 @@ class BlitzDslPlugin implements Plugin<Project> {
                 t.dependsOn(project.tasks.named(TASK_IMPORT_MAPPINGS), project.tasks.named(TASK_IMPORT_DATABASE_TYPES))
             }
         })
+    }
+
+    void configureApiPlugin() {
+        TaskProvider<Task> genCombinedTask = getGenerateCombinedTask()
+
+        // Configure API extension to rely on .combined files generated
+        // from the BlitzBasePlugin task `generateCombined`
+        ApiExtension api = project.extensions.getByType(ApiExtension)
+        api.combinedFiles.from(genCombinedTask)
+
+        // Results in task named 'combinedToIce'
+        api.language.create("ice", new Action<SplitExtension>() {
+            @Override
+            void execute(SplitExtension splitExtension) {
+                splitExtension.setOutputDir("slice/omero/model")
+                splitExtension.rename { String fileName ->
+                    // Removes .combined file extension and
+                    // removes the letter  `I` from file names ending with it
+                    String result = FilenameUtils.removeExtension(fileName)
+                    if (result.endsWith("I")) {
+                        int index = result.lastIndexOf("I")
+                        if (index != -1) {
+                            result = result.substring(0, index)
+                        }
+                    }
+                    return result
+                }
+            }
+        })
+
+        // Set each API SplitTask to depend on the `generateCombined` task
+        project.tasks.withType(SplitTask).configureEach(new Action<SplitTask>() {
+            @Override
+            void execute(SplitTask st) {
+                st.dependsOn(genCombinedTask)
+            }
+        })
+    }
+
+    TaskProvider<Task> getGenerateCombinedTask() {
+        DslExtension dsl = project.extensions.getByType(DslExtension)
+        Provider<String> taskName = dsl.createTaskName("combined")
+        project.tasks.named(taskName.get())
     }
 
 }

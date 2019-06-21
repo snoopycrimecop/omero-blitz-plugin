@@ -20,7 +20,7 @@ import org.openmicroscopy.dsl.extensions.SingleFileConfig
 import org.openmicroscopy.tasks.IcePythonTask
 
 @CompileStatic
-class BlitzIcePythonPlugin implements Plugin<Project> {
+class BlitzPythonPlugin implements Plugin<Project> {
 
     public static final String TASK_ZIP_PYTHON = "zipPython"
 
@@ -32,9 +32,7 @@ class BlitzIcePythonPlugin implements Plugin<Project> {
 
     @Override
     void apply(Project project) {
-        project.pluginManager.apply(BlitzIcePlugin)
-        project.pluginManager.apply(DslPlugin)
-        project.pluginManager.apply(ApiPlugin)
+        project.pluginManager.apply(BlitzPlugin)
 
         this.project = project
         this.ice = project.extensions.getByType(IceExtension)
@@ -69,7 +67,7 @@ class BlitzIcePythonPlugin implements Plugin<Project> {
         project.tasks.register(taskName, IcePythonTask, new Action<IcePythonTask>() {
             @Override
             void execute(IcePythonTask task) {
-                task.dependsOn(project.tasks.named(BlitzIcePlugin.TASK_PROCESS_SLICE))
+                task.dependsOn(project.tasks.named(BlitzPlugin.TASK_PROCESS_SLICE))
                 task.source = project.files(ice.iceSrcDir.dir(dir))
                 task.includeDirs.add(ice.iceSrcDir)
                 task.outputDir.set(ice.pythonOutputDir)

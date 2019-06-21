@@ -34,5 +34,9 @@ gradlePlugin {
             id = "org.openmicroscopy.blitz"
             implementationClass = "org.openmicroscopy.blitz.BlitzPlugin"
         }
+        BlitzPythonPlugin {
+            id = "org.openmicroscopy.blitz-python"
+            implementationClass = "org.openmicroscopy.blitz.BlitzPythonPlugin"
+        }
     }
 }
