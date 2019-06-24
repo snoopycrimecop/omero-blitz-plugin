@@ -53,11 +53,8 @@ class BlitzIcePlugin implements Plugin<Project> {
         project.tasks.register(TASK_COMPILE_ICEDOC, IceDocsTask, new Action<IceDocsTask>() {
             @Override
             void execute(IceDocsTask task) {
-                task.source = project.fileTree(ice.iceSrcDir).matching(new Action<PatternFilterable>() {
-                    @Override
-                    void execute(PatternFilterable filter) {
-                        filter.include "**/*.ice"
-                    }
+                task.source.from(project.fileTree(ice.iceSrcDir).matching { PatternFilterable filterable ->
+                    filterable.include "**/*.ice"
                 })
                 task.includeDirs.add(ice.iceSrcDir)
                 task.outputDir.set(ice.docsOutputDir)
