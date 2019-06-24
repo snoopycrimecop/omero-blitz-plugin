@@ -66,7 +66,7 @@ class BlitzPythonPlugin implements Plugin<Project> {
             @Override
             void execute(IcePythonTask task) {
                 task.dependsOn(project.tasks.named(BlitzPlugin.TASK_PROCESS_SLICE))
-                task.source.from(project.files(ice.iceSrcDir.dir(dir)))
+                task.source(project.files(ice.iceSrcDir.dir(dir)))
                 task.includeDirs.add(ice.iceSrcDir)
                 task.outputDir.set(ice.pythonOutputDir)
                 task.prefix.set(dirAsPrefix)
@@ -100,11 +100,10 @@ class BlitzPythonPlugin implements Plugin<Project> {
         })
 
         project.tasks.named(TASK_COMPILE_ICE_PYTHON).configure {
-            Provider<String> objectFactoryRegistrarName =
-                    dsl.createTaskName("objectFactoryRegistrar")
+            String objectFactoryRegistrarName = dsl.createTaskName("objectFactoryRegistrar")
 
             it.dependsOn(project.tasks.named("combinedToPython"),
-                    project.tasks.named(objectFactoryRegistrarName.get()))
+                    project.tasks.named(objectFactoryRegistrarName))
         }
     }
 
