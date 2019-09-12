@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "org.openmicroscopy"
-version = "5.5.1"
+version = "5.5.1-SNAPSHOT"
 
 repositories {
     jcenter()
@@ -22,8 +22,8 @@ dependencies {
         exclude module: "groovy-all"
     }
 
-    implementation("org.openmicroscopy:omero-dsl-plugin:latest.release")
-    implementation("org.openmicroscopy:omero-api-plugin:latest.release")
+    implementation("org.openmicroscopy:omero-dsl-plugin:[5.5.2,6.0.0[")
+    implementation("org.openmicroscopy:omero-api-plugin:[5.5.1,6.0.0[")
     implementation("org.openmicroscopy.gradle.ice-builder:slice:latest.release")
     implementation("commons-io:commons-io:2.6")
 }

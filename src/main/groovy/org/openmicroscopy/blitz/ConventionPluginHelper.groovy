@@ -20,10 +20,12 @@
  */
 package org.openmicroscopy.blitz
 
+import groovy.transform.CompileStatic
 import org.gradle.api.Project
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.plugins.JavaPlugin
 
+@CompileStatic
 class ConventionPluginHelper {
 
     static Configuration getApiConfiguration(Project project) {
