@@ -52,7 +52,7 @@ class ImportResourcesTask extends DefaultTask {
     @Input
     String pattern
 
-    PatternSet patternSet = new PatternSet()
+    private PatternSet patternSet = new PatternSet()
 
     @TaskAction
     void apply() {
@@ -85,10 +85,6 @@ class ImportResourcesTask extends DefaultTask {
 
     void setExtractDir(Object dir) {
         this.extractDir = project.file(dir)
-    }
-
-    List<File> getResults() {
-        return Arrays.asList(extractDir.listFiles())
     }
 
 }
