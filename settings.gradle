@@ -2,7 +2,28 @@ pluginManagement {
     repositories {
         mavenLocal()
         gradlePluginPortal()
-        maven { url 'https://artifacts.openmicroscopy.org/artifactory/maven' }
+        maven { url = "https://artifacts.openmicroscopy.org/artifactory/maven" }
+    }
+
+    resolutionStrategy {
+        eachPlugin {
+            // Work around https://github.com/gradle/gradle/issues/1697.
+            // Override version of omero plugin specified in build.gradle
+            if (requested.id.namespace == "org.openmicroscopy") {
+                String pluginEnvName = requested.id.name.split('-')
+                        .collect { it.toUpperCase() }.join('_') + "_VERSION"
+
+                String propertyName = requested.id.name.split('-')
+                        .collect { it.capitalize() }.join().uncapitalize() + "Version"
+
+                def version = System.getenv(pluginEnvName)
+                        ?: gradle.rootProject.findProperty(propertyName)
+
+                if (version) {
+                    useVersion(version.toString())
+                }
+            }
+        }
     }
 }
 
