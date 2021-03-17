@@ -7,8 +7,8 @@ group = "org.openmicroscopy"
 version = "5.5.1-SNAPSHOT"
 
 repositories {
-    jcenter()
     mavenLocal()
+    mavenCentral()
     maven { url 'https://artifacts.openmicroscopy.org/artifactory/maven' }
 }
 

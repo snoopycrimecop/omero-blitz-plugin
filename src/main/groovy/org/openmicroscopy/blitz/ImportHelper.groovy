@@ -71,8 +71,7 @@ class ImportHelper {
     static Configuration createDataFilesConfig(Project project) {
         project.buildscript.repositories.addAll(
                 project.repositories.mavenLocal(),
-                project.repositories.mavenCentral(),
-                project.repositories.jcenter()
+                project.repositories.mavenCentral()
         )
 
         Configuration config = project.configurations.create(CONFIGURATION_NAME)
